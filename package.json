@@ -1,0 +1,25 @@
+{
+  "name": "gantt-planner",
+  "version": "1.0.0",
+  "description": "Standalone Gantt planner for the Шаблон.xlsx task template",
+  "directories": {
+    "test": "tests"
+  },
+  "scripts": {
+    "build": "node src/build.mjs",
+    "fixtures": "node tests/make-fixtures.mjs",
+    "test": "npx playwright test",
+    "test:headed": "npx playwright test --headed",
+    "all": "npm run build && npm run test"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "module",
+  "dependencies": {
+    "xlsx": "^0.18.5"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.56.1"
+  }
+}

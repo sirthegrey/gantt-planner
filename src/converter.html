@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Конвертер РКК → Шаблон</title>
+<style>
+/*{{STYLES}}*/
+</style>
+</head>
+<body class="viz-root">
+<div id="converter" class="conv-page">
+
+  <header class="topbar">
+    <div class="brand">Конвертер РКК → Шаблон</div>
+    <label class="btn primary">
+      <span>Загрузить РКК.xlsx</span>
+      <input type="file" id="conv-file" accept=".xlsx,.xls" data-testid="conv-file" hidden>
+    </label>
+    <button id="conv-download" data-testid="conv-download" class="btn">Скачать «Шаблон из РКК.xlsx»</button>
+    <div class="spacer"></div>
+    <label class="check"><input type="checkbox" id="conv-preview-toggle" data-testid="conv-preview-toggle"> Предпросмотр</label>
+    <a class="btn" href="Gantt.html" data-testid="link-gantt">Открыть Гант</a>
+  </header>
+
+  <div class="conv-note muted">
+    Читается лист «26 4к»: названия задач — колонка H, строки 60–97; приоритет — колонка A;
+    часы — колонки AG–AY (фамилии в строке 48); стек исполнителя — таблица H/I, строки 4–36.
+    Стек мапится: C# → Дотнет, Python → Питон, C++ → C++, TS → Фронт. Остальные роли попадают в отчёт.
+    Если один стек делают несколько человек, лишние фазы пишутся в дополнительные тройки колонок
+    (стек, часы, исполнитель) — Гант читает их как обычные последовательные фазы.
+  </div>
+
+  <section class="panel">
+    <h3>Отчёт</h3>
+    <div id="conv-report" data-testid="conv-report"></div>
+  </section>
+
+  <section id="conv-preview" class="table-wrap conv-preview" data-testid="conv-preview" hidden></section>
+
+</div>
+<script>
+/*{{SHEETJS}}*/
+</script>
+<script>
+/*{{APP}}*/
+</script>
+</body>
+</html>

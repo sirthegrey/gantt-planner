@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Гант — планировщик задач</title>
+<style>
+/*{{STYLES}}*/
+</style>
+</head>
+<body data-palette="#2a78d6,#eb6834,#1baf7a,#eda100">
+<div id="app" class="viz-root">
+
+  <header class="topbar">
+    <div class="brand">Гант</div>
+    <label class="btn primary">
+      <span>Загрузить xlsx</span>
+      <input type="file" id="file-input" accept=".xlsx,.xls" data-testid="file-input" hidden>
+    </label>
+    <div class="spacer"></div>
+    <div class="segmented" role="group" aria-label="Масштаб">
+      <button data-zoom="day" data-testid="zoom-day" class="seg-btn">День</button>
+      <button data-zoom="week" data-testid="zoom-week" class="seg-btn active">Неделя</button>
+      <button data-zoom="month" data-testid="zoom-month" class="seg-btn">Месяц</button>
+    </div>
+    <label class="check"><input type="checkbox" id="toggle-baseline" data-testid="toggle-baseline" checked> Базовый план</label>
+    <label class="check" title="Включено: задача не начинается раньше базового начала и окончания из файла. Выключено: задача стартует как можно раньше, ждёт только занятость исполнителя.">
+      <input type="checkbox" id="toggle-respect-baseline" data-testid="toggle-respect-baseline" checked> Не раньше плана</label>
+    <label class="check"><input type="checkbox" id="toggle-table" data-testid="toggle-table"> Таблица</label>
+    <button id="btn-today" data-testid="btn-today" class="btn">Сегодня</button>
+    <a class="btn" href="Конвертер.html" data-testid="link-converter" title="Пересобрать Шаблон.xlsx из РКК.xlsx">Конвертер РКК</a>
+    <button id="theme-toggle" data-testid="theme-toggle" class="btn" title="Переключить светлую и тёмную тему">
+      <span aria-hidden="true">◐</span> Тема</button>
+    <button id="help-open" data-testid="help-open" class="btn" title="Правила планирования (?)">?</button>
+  </header>
+
+  <div id="stats" class="stats" data-testid="stats" role="status" aria-live="polite">Файл не загружен</div>
+
+  <div class="filterbar" role="search">
+    <label class="filter-field">Исполнитель
+      <select id="filter-executor" data-testid="filter-executor" class="inp">
+        <option value="">все</option>
+      </select>
+    </label>
+    <label class="filter-field">Название
+      <input type="search" id="filter-query" data-testid="filter-query" class="inp"
+             placeholder="часть названия или номер ТТ" autocomplete="off">
+    </label>
+    <button id="filter-reset" data-testid="filter-reset" class="btn small">Сбросить</button>
+    <span id="filter-count" class="muted" data-testid="filter-count"></span>
+  </div>
+
+  <main class="workspace">
+    <div id="gantt" class="gantt" data-testid="gantt-scroll"></div>
+
+    <aside class="side">
+      <details class="panel" data-panel="check" open>
+        <summary><h3>Проверка</h3><span id="alerts-summary" class="panel-hint"></span></summary>
+        <div id="alerts" class="alerts" data-testid="alerts"></div>
+      </details>
+
+      <details class="panel" data-panel="task" open>
+        <summary><h3>Задача</h3></summary>
+        <div id="inspector" class="inspector" data-testid="inspector-empty"></div>
+      </details>
+
+      <details class="panel" data-panel="calendar" open>
+        <summary><h3>Производственный календарь</h3></summary>
+        <p class="muted">Выходные: сб, вс. Часы в день: 8. Список праздников 2026–2027 — черновой, проверьте и отредактируйте.</p>
+        <form id="holiday-form" class="holiday-form" novalidate>
+          <input type="date" id="holiday-pick" data-testid="holiday-pick" class="inp">
+          <input type="text" id="holiday-date" data-testid="holiday-date" placeholder="2027-03-08" pattern="\d{4}-\d{2}-\d{2}" class="inp">
+          <button type="submit" data-testid="holiday-add" class="btn">Добавить</button>
+        </form>
+        <div id="holiday-list" class="chips" data-testid="holiday-list"></div>
+        <button id="btn-reset-holidays" data-testid="btn-reset-holidays" class="btn small">Сбросить к списку РФ</button>
+      </details>
+
+      <details class="panel" data-panel="absences" open>
+        <summary><h3>Отсутствия исполнителей</h3></summary>
+        <p class="muted">Отпуск или болезнь: работа в фазе встаёт на паузу, срок сдвигается на пропущенные рабочие дни.</p>
+        <form id="absence-form" class="holiday-form" novalidate>
+          <select id="absence-executor" data-testid="absence-executor" class="inp"></select>
+          <input type="date" id="absence-from" data-testid="absence-from" class="inp" title="Начало отсутствия">
+          <input type="date" id="absence-to" data-testid="absence-to" class="inp" title="Окончание отсутствия (включительно)">
+          <button type="submit" data-testid="absence-add" class="btn">Добавить</button>
+        </form>
+        <div id="absence-list" class="chips" data-testid="absence-list"></div>
+        <button id="btn-reset-absences" data-testid="btn-reset-absences" class="btn small">Очистить отсутствия</button>
+      </details>
+
+      <details class="panel" data-panel="legend" open>
+        <summary><h3>Легенда</h3></summary>
+        <div class="legend" data-testid="legend">
+          <span class="legend-item"><span class="swatch s1"></span>C++</span>
+          <span class="legend-item"><span class="swatch s2"></span>Питон</span>
+          <span class="legend-item"><span class="swatch s3"></span>Дотнет</span>
+          <span class="legend-item"><span class="swatch s4"></span>Фронт</span>
+          <span class="legend-item"><span class="swatch ghost"></span>Базовый план</span>
+          <span class="legend-item"><span class="swatch today"></span>Сегодня</span>
+        </div>
+      </details>
+    </aside>
+  </main>
+
+  <section id="table-view" class="table-wrap" hidden></section>
+
+  <div id="help-dialog" class="help-dialog" hidden data-testid="help-dialog" role="dialog" aria-label="Правила планирования">
+    <div class="help-card">
+      <div class="help-head">
+        <h2>Как строится план</h2>
+        <button id="help-close" data-testid="help-close" class="mini" aria-label="Закрыть справку">×</button>
+      </div>
+      <ul class="help-list">
+        <li><b>Фазы задачи</b> идут по порядку стеков: C++ → Питон → Дотнет → Фронт. Порядок меняется в карточке задачи (↑/↓), он попадает в расчёт сразу.</li>
+        <li><b>C++ и Питон идут параллельно</b>, если у них разные исполнители. Дотнет стартует после того, как закончатся оба. Если исполнитель один — строго по очереди.</li>
+        <li><b>Не больше двух задач на исполнителя</b> одновременно. Третья ждёт, когда освободится слот.</li>
+        <li><b>Правило 3×</b>: две задачи могут идти у одного человека параллельно, только если часы их фаз различаются втрое и больше (крупный блок и мелкий).</li>
+        <li><b>Отпуска</b>: фаза встаёт на паузу на дни отсутствия, срок сдвигается вправо, часы не теряются.</li>
+        <li><b>Даты из файла — ограничения.</b> Старт не раньше самой поздней из дат: фактического начала (факт важнее всего), «Не раньше» (готовность ТТ) и базового начала. Если задано только базовое окончание — начало считается назад от него.</li>
+        <li><b>Галочка «Не раньше плана»</b> (включена) учитывает базовые даты. Снимите — задачи поедут как можно раньше, останутся только занятость исполнителей и готовность ТТ.</li>
+        <li><b>Приоритет 1 — самый высокий.</b> Планировщик раздаёт ресурсы в порядке приоритета; если более приоритетная задача всё равно стартует позже, появляется предупреждение.</li>
+        <li>Жёлтая плашка «Задача» сверху — предупреждения; клик по предупреждению подсвечивает задачу на диаграмме.</li>
+        <li><b>Фильтр</b> над диаграммой: по исполнителю и по части названия (складываются). Фильтр только скрывает строки — расписание не пересчитывается. Клик по предупреждению снимает фильтр, чтобы показать задачу.</li>
+        <li>Горячие клавиши: <b>Esc</b> — снять выбор, <b>+/−</b> — масштаб, <b>T</b> — к сегодняшнему дню, <b>/</b> — поиск по названию, <b>?</b> — эта справка.</li>
+      </ul>
+    </div>
+  </div>
+
+  <div id="tooltip" class="tooltip" hidden data-testid="tooltip"></div>
+</div>
+<script>
+/*{{SHEETJS}}*/
+</script>
+<script>
+/*{{APP}}*/
+</script>
+</body>
+</html>
